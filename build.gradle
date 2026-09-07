@@ -1,0 +1,28 @@
+plugins { id 'net.fabricmc.fabric-loom' version '1.15.4' }
+version = '0.4.2-experimental+26.2'
+group = 'dev.curved180'
+repositories { mavenCentral(); maven { url = 'https://api.modrinth.com/maven' } }
+dependencies {
+ minecraft 'com.mojang:minecraft:26.2'
+ implementation 'net.fabricmc:fabric-loader:0.19.3'
+ implementation 'net.fabricmc.fabric-api:fabric-api:0.158.0+26.2'
+}
+java { toolchain.languageVersion = JavaLanguageVersion.of(25); withSourcesJar() }
+
+dependencies { implementation 'maven.modrinth:iris:oaD6KQls'; implementation 'maven.modrinth:sodium:2Yom1N68' }
+
+loom { runs { client {
+ if (project.hasProperty('smokeWorld')) {
+  programArgs '--username', 'Player97', '--width', '1720', '--height', '720', '--quickPlaySingleplayer', project.property('smokeWorld')
+ }
+} } }
+tasks.named('jar') { from('LICENSE') }
+
+dependencies { testImplementation 'org.junit.jupiter:junit-jupiter:5.12.2'; testRuntimeOnly 'org.junit.platform:junit-platform-launcher' }
+test { useJUnitPlatform() }
+
+
+
+
+
+

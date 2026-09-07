@@ -1,0 +1,6 @@
+{
+  "curved180.fov.label": "FOV (Horizontal): %s°",
+  "curved180.fov.tooltip": "Horizontal field of view, 30–360 degrees. Full coverage near the horizon; smoothly narrows toward 100 degrees near vertical. Zoom can narrow it further. Upright panorama blends into camera-relative viewing."
+}
+
+

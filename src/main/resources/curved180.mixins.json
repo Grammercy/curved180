@@ -1,0 +1,8 @@
+{
+  "required": true,
+  "package": "dev.curved180.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": ["FloatCachedUniformMixin", "OptionsMixin", "CameraMixin", "GameRendererMixin", "PipelineManagerMixin", "HandRendererMixin", "HandRendererAccess"],
+  "injectors": { "defaultRequire": 1 }
+}
+

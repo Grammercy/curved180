@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "curved180",
+  "version": "0.4.2-experimental+26.2",
+  "name": "Curved 180",
+  "description": "Experimental 360-degree panorama with upright pitch blending for ultrawide displays.",
+  "environment": "client",
+  "license": "GPL-2.0-only",
+  "entrypoints": { "client": ["dev.curved180.Curved180"] },
+  "mixins": ["curved180.mixins.json"],
+  "depends": { "fabricloader": ">=0.19.3", "fabric-api": ">=0.152.1", "minecraft": "26.2", "java": ">=25", "iris": "1.11.2+mc26.2", "sodium": "0.9.1+mc26.2" }
+}
+
+
+

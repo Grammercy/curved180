@@ -1,6 +1,9 @@
 {
   "curved180.fov.label": "FOV (Horizontal): %s°",
-  "curved180.fov.tooltip": "Horizontal field of view, 30–360 degrees. Full coverage near the horizon; smoothly narrows toward 100 degrees near vertical. Zoom can narrow it further. Upright panorama blends into camera-relative viewing."
+  "curved180.fov.tooltip": "Horizontal field of view, 30–360 degrees. Full coverage near the horizon; smoothly narrows toward 100 degrees near vertical. Zoom can narrow it further. Upright panorama blends into camera-relative viewing.",
+  "curved180.toggle.on": "Curved180: ON",
+  "curved180.toggle.off": "Curved180: OFF",
+  "curved180.toggle.tooltip": "Turn panorama rendering on or off. When off, Minecraft uses its normal camera and caps the rendered FOV at 110°. Your Curved180 FOV setting is kept."
 }
 
 

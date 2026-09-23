@@ -26,6 +26,7 @@ public abstract class CameraMixin {
 
     @ModifyExpressionValue(method="update", at=@At(value="INVOKE", target="Lnet/minecraft/client/Camera;calculateFov(F)F"))
     private float curved$fov(float adjustedFov) {
+        if (!Curved180.enabled()) return Math.min(adjustedFov, 110f);
         if (!Curved180.active()) return adjustedFov;
         // Observe the completed vanilla + mod calculation, including Zoomify's return modifier.
         // Freeze it while rendering secondary cameras so animation advances only once per frame.

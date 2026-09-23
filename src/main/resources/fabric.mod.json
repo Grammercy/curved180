@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "curved180",
-  "version": "0.4.4-experimental+26.2",
+  "version": "0.4.5-experimental+26.2",
   "name": "Curved 180",
   "description": "Experimental 360-degree panorama with upright pitch blending for ultrawide displays.",
   "environment": "client",

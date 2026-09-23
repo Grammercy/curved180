@@ -87,6 +87,7 @@ World camera bobbing, hurt tilt, and nausea/portal projection distortion are sup
 - At effective FOVs up to 60 degrees, the renderer uses one adaptive camera capture.
 - Above 60 degrees, it uses **six overlapping camera directions**, including upward and downward views. Each capture currently uses a full-window-sized texture and repeats world extraction/rendering and Iris processing.
 - At 3440×1440, six captures total about 29.7 million color pixels before the shader pack's additional passes, shadows, depth buffers, temporal buffers, and final compositing.
+- The unreleased source reduces per-capture OpenGL state queries and unchanged-size setup, including at 360 degrees. It keeps all six world renders and their full resolution, so the gain depends on how much CPU driver overhead contributes to frame time.
 - This release does not include FSR, frame generation, dynamic resolution, shared shadow rendering, or an optimized capture-resolution scheme. It makes no 165 FPS claim.
 - More powerful shaders and larger render distances can multiply the cost. A simpler pack, lower shader quality, lower resolution, or lower render distance may help; gains depend on the bottleneck.
 - Horizontal structures can curve in a cylindrical panorama. Full 360-degree coverage, uniform motion, and low distortion at every elevation cannot all be preserved simultaneously.

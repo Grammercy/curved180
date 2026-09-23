@@ -11,10 +11,14 @@ import static org.lwjgl.opengl.GL33C.*;
 
 /** An OpenGL-only post-Iris compositor. All GL state touched here is restored. */
 public final class CylinderCompositor implements AutoCloseable {
-    private int width, height, program, vao, readFbo, drawFbo;
+    private int width, height, program, vao, readFbo, drawFbo, readSource, drawTarget;
+    private boolean samplersBound;
     private final int[] textures = new int[6];
+    private final int[] viewUniforms = new int[6];
+    private int horizontalUniform, verticalUniform, captureUniform, pitchUniform, uprightUniform, singleViewUniform;
 
     public void prepare(int w, int h) {
+        if (program != 0 && width == w && height == h) return;
         try (State ignored = new State()) {
             if (program == 0) {
                 int vs = shader(GL_VERTEX_SHADER, "/assets/curved180/shaders/cylinder.vert");
@@ -28,10 +32,18 @@ public final class CylinderCompositor implements AutoCloseable {
                         throw new IllegalStateException("Cylinder program link failed: " + log);
                     }
                     program = linked;
+                    for (int i = 0; i < 6; i++) viewUniforms[i] = glGetUniformLocation(program, "view" + i);
+                    horizontalUniform = glGetUniformLocation(program, "horizontalRadians");
+                    verticalUniform = glGetUniformLocation(program, "verticalTangent");
+                    captureUniform = glGetUniformLocation(program, "captureTangent");
+                    pitchUniform = glGetUniformLocation(program, "pitchRadians");
+                    uprightUniform = glGetUniformLocation(program, "uprightWeight");
+                    singleViewUniform = glGetUniformLocation(program, "singleView");
                 } finally { glDeleteShader(vs); if (fs != 0) glDeleteShader(fs); }
                 vao = glGenVertexArrays(); readFbo = glGenFramebuffers(); drawFbo = glGenFramebuffers();
             }
             if (width != w || height != h) {
+                readSource = drawTarget = 0;
                 glActiveTexture(GL_TEXTURE0);
                 for (int i = 0; i < 6; i++) {
                     if (textures[i] != 0) glDeleteTextures(textures[i]);
@@ -49,12 +61,16 @@ public final class CylinderCompositor implements AutoCloseable {
     }
 
     public void capture(int view, RenderTarget target) {
-        try (State ignored = new State()) {
+        try (CopyState ignored = new CopyState()) {
             glBindFramebuffer(GL_READ_FRAMEBUFFER, readFbo);
-            glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ((GlTexture)target.getColorTexture()).glId(), 0);
-            glReadBuffer(GL_COLOR_ATTACHMENT0);
-            check(GL_READ_FRAMEBUFFER);
-            glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, textures[view]);
+            int source = ((GlTexture)target.getColorTexture()).glId();
+            if (readSource != source) {
+                glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, source, 0);
+                glReadBuffer(GL_COLOR_ATTACHMENT0);
+                check(GL_READ_FRAMEBUFFER);
+                readSource = source;
+            }
+            glBindTexture(GL_TEXTURE_2D, textures[view]);
             glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, width, height);
         }
     }
@@ -62,8 +78,13 @@ public final class CylinderCompositor implements AutoCloseable {
     public void composite(RenderTarget target) {
         try (State ignored = new State()) {
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, drawFbo);
-            glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ((GlTexture)target.getColorTexture()).glId(), 0);
-            glDrawBuffer(GL_COLOR_ATTACHMENT0); check(GL_DRAW_FRAMEBUFFER);
+            int destination = ((GlTexture)target.getColorTexture()).glId();
+            if (drawTarget != destination) {
+                glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, destination, 0);
+                glDrawBuffer(GL_COLOR_ATTACHMENT0);
+                check(GL_DRAW_FRAMEBUFFER);
+                drawTarget = destination;
+            }
             glViewport(0, 0, width, height);
             glDisable(GL_DEPTH_TEST); glDisable(GL_BLEND); glDisable(GL_CULL_FACE);
             glDisable(GL_SCISSOR_TEST); glDisable(GL_STENCIL_TEST);
@@ -73,15 +94,16 @@ public final class CylinderCompositor implements AutoCloseable {
             glUseProgram(program); glBindVertexArray(vao);
             for (int i = 0; i < 6; i++) {
                 glActiveTexture(GL_TEXTURE0 + i); glBindTexture(GL_TEXTURE_2D, textures[i]); glBindSampler(i, 0);
-                glUniform1i(glGetUniformLocation(program, "view" + i), i);
+                if (!samplersBound) glUniform1i(viewUniforms[i], i);
             }
+            samplersBound = true;
             ProjectionPlan plan = Curved180.plan(width, height);
-            glUniform1f(glGetUniformLocation(program, "horizontalRadians"), (float)plan.horizontalRadians());
-            glUniform1f(glGetUniformLocation(program, "verticalTangent"), (float)plan.verticalTangent());
-            glUniform1f(glGetUniformLocation(program, "captureTangent"), (float)plan.captureTangent());
-            glUniform1f(glGetUniformLocation(program, "pitchRadians"), (float)plan.pitchRadians());
-            glUniform1f(glGetUniformLocation(program, "uprightWeight"), (float)plan.uprightWeight());
-            glUniform1i(glGetUniformLocation(program, "singleView"), plan.multiView() ? 0 : 1);
+            glUniform1f(horizontalUniform, (float)plan.horizontalRadians());
+            glUniform1f(verticalUniform, (float)plan.verticalTangent());
+            glUniform1f(captureUniform, (float)plan.captureTangent());
+            glUniform1f(pitchUniform, (float)plan.pitchRadians());
+            glUniform1f(uprightUniform, (float)plan.uprightWeight());
+            glUniform1i(singleViewUniform, plan.multiView() ? 0 : 1);
             glDrawArrays(GL_TRIANGLES, 0, 3);
         }
     }
@@ -108,7 +130,26 @@ public final class CylinderCompositor implements AutoCloseable {
         if (vao != 0) glDeleteVertexArrays(vao);
         if (readFbo != 0) glDeleteFramebuffers(readFbo);
         if (drawFbo != 0) glDeleteFramebuffers(drawFbo);
-        program = vao = readFbo = drawFbo = width = height = 0;
+        program = vao = readFbo = drawFbo = readSource = drawTarget = width = height = 0;
+        samplersBound = false;
+    }
+
+    /** The copy path changes only the read FBO and texture unit zero. */
+    private static final class CopyState implements AutoCloseable {
+        private final int read = glGetInteger(GL_READ_FRAMEBUFFER_BINDING);
+        private final int active = glGetInteger(GL_ACTIVE_TEXTURE);
+        private final int texture;
+
+        CopyState() {
+            glActiveTexture(GL_TEXTURE0);
+            texture = glGetInteger(GL_TEXTURE_BINDING_2D);
+        }
+
+        @Override public void close() {
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, read);
+            glBindTexture(GL_TEXTURE_2D, texture);
+            glActiveTexture(active);
+        }
     }
 
     private static final class State implements AutoCloseable {

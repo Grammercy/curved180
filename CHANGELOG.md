@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+- Reduce OpenGL driver work during every capture, including 360-degree frames, by saving only state the texture copy changes.
+- Skip setup when the capture dimensions are unchanged, reuse unchanged framebuffer attachments, and cache compositor shader uniform locations.
+
 ## 0.4.2-experimental+26.2
 - First public source/release package under GPL-2.0-only.
 - Comprehensive installation, behavior, architecture, limitations, and validation documentation.

@@ -85,9 +85,9 @@ World camera bobbing, hurt tilt, and nausea/portal projection distortion are sup
 ## Performance and visual limitations
 
 - At effective FOVs up to 60 degrees, the renderer uses one adaptive camera capture.
-- Above 60 degrees, it uses **six overlapping camera directions**, including upward and downward views. Each capture currently uses a full-window-sized texture and repeats world extraction/rendering and Iris processing.
-- At 3440×1440, six captures total about 29.7 million color pixels before the shader pack's additional passes, shadows, depth buffers, temporal buffers, and final compositing.
-- The unreleased source reduces per-capture OpenGL state queries and unchanged-size setup, including at 360 degrees. It keeps all six world renders and their full resolution, so the gain depends on how much CPU driver overhead contributes to frame time.
+- The published 0.4.2 release uses six overlapping camera directions above 60 degrees. With the slider set to 360 degrees, the unreleased source uses four within half a degree of level pitch, or five with the needed upward or downward capture at steeper pitch. The choice follows the slider while normal FOV effects change effective coverage. Other slider settings retain the six-view path.
+- Each capture remains full-window resolution and repeats world extraction/rendering and Iris processing. At 3440×1440, four captures cover about 19.8 million color pixels; five cover about 24.8 million; six cover about 29.7 million, before the shader pack's additional passes, shadows, depth buffers, temporal buffers, and final compositing.
+- The unreleased source also reduces per-capture OpenGL state queries and unchanged-size setup. FPS gains depend on the scene and shader pack. The capture selection retains full ray coverage but changes blending near the upper and lower parts of the panorama; shader-pack visual equivalence has not yet been confirmed.
 - This release does not include FSR, frame generation, dynamic resolution, shared shadow rendering, or an optimized capture-resolution scheme. It makes no 165 FPS claim.
 - More powerful shaders and larger render distances can multiply the cost. A simpler pack, lower shader quality, lower resolution, or lower render distance may help; gains depend on the bottleneck.
 - Horizontal structures can curve in a cylindrical panorama. Full 360-degree coverage, uniform motion, and low distortion at every elevation cannot all be preserved simultaneously.
@@ -124,6 +124,7 @@ The installable JAR is written to `build/libs/`. The `-sources.jar` is for devel
 - Its isolated Iris/Complementary client loaded a world with the cube-capture compositor.
 - **0.4.1 removed the effects cap without running tests or an in-game validation, at the owner's request.**
 - **0.4.2 is the GPL-2.0-only publication/package update with the same rendering behavior. It was assembled without tests or launching Minecraft.**
+- The unreleased capture selection passed automated ray-coverage tests. An isolated Fabric/Iris/Sodium client loaded a world with the modified compositor both without a shader pack and with Complementary Reimagined r5.9. Shader-pack image quality during camera movement and FPS remain to be measured.
 
 Tests are included for future work, but their presence is not evidence that the current release was tested. Visual comfort during mouse movement and complete removal of shader bands are not confirmed.
 

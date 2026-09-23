@@ -4,6 +4,24 @@ package dev.curved180;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 class ProjectionPlanTest {
+    @Test void optimizedPanoramaCapturesEveryRayAtFullResolution() {
+        for (int degrees : new int[]{61,90,120,180,240,270,300,345,360,380,420,720})
+            for (int[] size : new int[][]{{3440,1440},{1920,1080},{1440,3440}})
+                for (double pitch=-90;pitch<=90;pitch+=.25) {
+                    var plan=ProjectionPlan.create(degrees,size[0],size[1],pitch,true);
+                    assertTrue(plan.views().length<=5);
+                    for (int x=0;x<=40;x++) for (int y=0;y<=20;y++) {
+                        double[] r=plan.ray(x/40.0,y/20.0);
+                        double horizontal=Math.max(Math.abs(r[0]),Math.abs(r[2]));
+                        boolean side=horizontal>0 && Math.abs(r[1])/horizontal<=plan.captureTangent();
+                        boolean pole=(plan.poleMode()==1 && r[1]>0 || plan.poleMode()==-1 && r[1]<0)
+                            && Math.max(Math.abs(r[0]),Math.abs(r[2]))/Math.abs(r[1])<=plan.captureTangent();
+                        assertTrue(side || pole, "Uncovered ray at FOV " + degrees + " pitch " + pitch);
+                    }
+                }
+        assertEquals(4,ProjectionPlan.create(360,3440,1440,0,true).views().length);
+        assertEquals(5,ProjectionPlan.create(360,3440,1440,15,true).views().length);
+    }
     @Test void horizonIsUnchangedAcrossSliderAndZoomRange() {
         for (int d=1; d<=360; d++) {
             var p=ProjectionPlan.create(d,3440,1440);

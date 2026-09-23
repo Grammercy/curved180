@@ -21,7 +21,8 @@ public final class Curved180 implements ClientModInitializer {
     }
 
     public static ProjectionPlan plan(int width, int height) {
-        return ProjectionPlan.create(effectiveFov, Math.max(1, width), Math.max(1, height), pitchDegrees);
+        return ProjectionPlan.create(effectiveFov, Math.max(1, width), Math.max(1, height), pitchDegrees,
+            Minecraft.getInstance().options.fov().get() == 360);
     }
 
     public static ProjectionPlan plan() {

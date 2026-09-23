@@ -1,8 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.4.3-experimental+26.2 (unreleased)
 - Reduce OpenGL driver work during every capture, including 360-degree frames, by saving only state the texture copy changes.
 - Skip setup when the capture dimensions are unchanged, reuse unchanged framebuffer attachments, and cache compositor shader uniform locations.
+- At a 360-degree slider setting, use four full-resolution horizontal captures near level pitch, or five captures with the needed pole view at steeper pitch, including when normal FOV effects adjust coverage. Preserve the panorama ray mapping and check every ray against the capture bounds.
 
 ## 0.4.2-experimental+26.2
 - First public source/release package under GPL-2.0-only.

@@ -4,11 +4,14 @@ package dev.curved180;
 
 /** Pure projection geometry, independent of the game and graphics context. */
 public record ProjectionPlan(double horizontalRadians, double verticalTangent, double captureTangent,
-                             boolean multiView, double pitchRadians, double uprightWeight) {
+                             boolean multiView, double pitchRadians, double uprightWeight, int poleMode) {
     public static ProjectionPlan create(double degrees, int width, int height) {
         return create(degrees, width, height, 0);
     }
     public static ProjectionPlan create(double degrees, int width, int height, double pitchDegrees) {
+        return create(degrees, width, height, pitchDegrees, false);
+    }
+    public static ProjectionPlan create(double degrees, int width, int height, double pitchDegrees, boolean optimizedPanorama) {
         if (width <= 0 || height <= 0) throw new IllegalArgumentException("Viewport dimensions must be positive");
         double base = Double.isFinite(degrees) ? Math.max(0.01, degrees) : 70;
         double pitch = Double.isFinite(pitchDegrees) ? Math.max(-90, Math.min(90, pitchDegrees)) : 0;
@@ -17,16 +20,28 @@ public record ProjectionPlan(double horizontalRadians, double verticalTangent, d
         double v = Math.min(Math.tan(Math.toRadians(40)), h * height / (2.0 * width));
         boolean multi = h > Math.PI / 3;
         double upright = (1 - smooth(25, 75, Math.abs(pitch))) * smooth(60, 100, base);
+        // Four horizontal captures cover the level 360-degree band. At greater
+        // pitch, one pole capture covers the side the band bends toward.
+        int poleMode = optimizedPanorama && multi
+            ? pitch > .5 ? -1 : pitch < -.5 ? 1 : 0 : 2;
         // Cube faces include enough overlap to blend without sampling beyond their edges.
-        double capture = multi ? 1.2 : 1.02 * Math.max(Math.tan(h / 2), v / Math.cos(h / 2));
-        return new ProjectionPlan(h, v, capture, multi, Math.toRadians(pitch), upright);
+        double capture = multi ? poleMode == 2 ? 1.2 : 1.25 : 1.02 * Math.max(Math.tan(h / 2), v / Math.cos(h / 2));
+        return new ProjectionPlan(h, v, capture, multi, Math.toRadians(pitch), upright, poleMode);
     }
     private static double smooth(double a, double b, double x) {
         double t = Math.max(0, Math.min(1, (x - a) / (b - a)));
         return t * t * (3 - 2 * t);
     }
     public float captureDegrees() { return (float)Math.toDegrees(2 * Math.atan(captureTangent)); }
-    public int[] views() { return multiView ? new int[]{1, 0, 2, 3, 4, 5} : new int[]{1}; }
+    public int[] views() {
+        if (!multiView) return new int[]{1};
+        return switch (poleMode) {
+            case 0 -> new int[]{1, 0, 2, 3};
+            case 1 -> new int[]{1, 0, 2, 3, 4};
+            case -1 -> new int[]{1, 0, 2, 3, 5};
+            default -> new int[]{1, 0, 2, 3, 4, 5};
+        };
+    }
 
     /** Reference for the fragment shader, in the unmodified camera's local coordinates. */
     public double[] ray(double u, double v) {

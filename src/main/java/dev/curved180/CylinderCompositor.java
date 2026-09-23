@@ -15,7 +15,7 @@ public final class CylinderCompositor implements AutoCloseable {
     private boolean samplersBound;
     private final int[] textures = new int[6];
     private final int[] viewUniforms = new int[6];
-    private int horizontalUniform, verticalUniform, captureUniform, pitchUniform, uprightUniform, singleViewUniform;
+    private int horizontalUniform, verticalUniform, captureUniform, pitchUniform, uprightUniform, singleViewUniform, poleModeUniform;
 
     public void prepare(int w, int h) {
         if (program != 0 && width == w && height == h) return;
@@ -39,6 +39,7 @@ public final class CylinderCompositor implements AutoCloseable {
                     pitchUniform = glGetUniformLocation(program, "pitchRadians");
                     uprightUniform = glGetUniformLocation(program, "uprightWeight");
                     singleViewUniform = glGetUniformLocation(program, "singleView");
+                    poleModeUniform = glGetUniformLocation(program, "poleMode");
                 } finally { glDeleteShader(vs); if (fs != 0) glDeleteShader(fs); }
                 vao = glGenVertexArrays(); readFbo = glGenFramebuffers(); drawFbo = glGenFramebuffers();
             }
@@ -104,6 +105,7 @@ public final class CylinderCompositor implements AutoCloseable {
             glUniform1f(pitchUniform, (float)plan.pitchRadians());
             glUniform1f(uprightUniform, (float)plan.uprightWeight());
             glUniform1i(singleViewUniform, plan.multiView() ? 0 : 1);
+            glUniform1i(poleModeUniform, plan.poleMode());
             glDrawArrays(GL_TRIANGLES, 0, 3);
         }
     }

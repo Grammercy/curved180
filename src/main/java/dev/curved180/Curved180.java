@@ -15,6 +15,7 @@ public final class Curved180 implements ClientModInitializer {
     public static int view = 1;
     public static double effectiveFov = 70;
     public static double pitchDegrees;
+    public static final SharedShadowRaster sharedShadows = new SharedShadowRaster();
 
     @Override public void onInitializeClient() {
         LOG.info("Curved180: horizontal FOV 30–360, with camera FOV effects and zoom support");

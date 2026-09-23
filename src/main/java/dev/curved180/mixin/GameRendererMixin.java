@@ -44,6 +44,7 @@ public abstract class GameRendererMixin {
         float effects = state.optionsRenderState.screenEffectScale;
         float hurt = state.levelRenderState.cameraRenderState.entityRenderState.hurtTime;
         Curved180.sharedUniforms.beginFrame();
+        Curved180.sharedShadows.beginFrame();
         Curved180.shareEnvironment = Iris.getCurrentPackName().toLowerCase(java.util.Locale.ROOT).contains("complementary");
         Curved180.capturing = true;
         try {
@@ -146,7 +147,7 @@ public abstract class GameRendererMixin {
     }
 
     @Inject(method="close", at=@At("HEAD"))
-    private void curved$close(CallbackInfo ci) { curved$compositor.close(); }
+    private void curved$close(CallbackInfo ci) { curved$compositor.close(); Curved180.sharedShadows.close(); }
 
     @Inject(method="renderItemInHand", at=@At("HEAD"), cancellable=true)
     private void curved$sideHand(CallbackInfo ci) {

@@ -69,6 +69,10 @@ public abstract class GameRendererMixin {
                     .clearColorAndDepthTextures(target.getColorTexture(), new org.joml.Vector4f(0, 0, 0, 1), target.getDepthTexture(), 0.0);
                 original.call(renderer, delta);
                 curved$compositor.capture(v, target);
+                // A view can recycle Minecraft/Sodium ring buffers and may reload
+                // chunk geometry. Their fences must belong to an earlier submit.
+                // Vanilla submits once per frame; we render several views here.
+                RenderSystem.getDevice().createCommandEncoder().submit();
             }
             curved$compositor.composite(renderer.mainRenderTarget());
         } finally {
